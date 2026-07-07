@@ -1,0 +1,13 @@
+{
+  "name": "QuestKeep",
+  "short_name": "QuestKeep",
+  "description": "Encrypted daily time-block planner",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1C2128",
+  "theme_color": "#1C2128",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
