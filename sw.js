@@ -1,5 +1,5 @@
 /* QuestKeep service worker — cache-first so the app works fully offline */
-const CACHE = "questkeep-v1";
+const CACHE = "questkeep-v2";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {

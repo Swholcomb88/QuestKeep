@@ -15,7 +15,7 @@
   --tealdk:#25655A;--red:#E36A6A;--work:#5E93C5;--drive:#7C8CA5;--ink:#15181E;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Avenir Next','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background-color:var(--bg);background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><rect width='260' height='260' fill='none'/><g fill='none' stroke='%233A4454' stroke-width='1' opacity='.16'><path d='M-20 60 Q 60 20 130 70 T 290 60'/><path d='M-20 120 Q 70 90 140 130 T 290 115'/><path d='M-20 190 Q 50 160 130 200 T 290 185'/><path d='M-20 250 Q 80 220 150 255 T 290 245'/></g><g stroke='%232C3442' stroke-width='.6' opacity='.35'><path d='M65 0V260M130 0V260M195 0V260M0 65H260M0 130H260M0 195H260'/></g><g fill='%233A4454' opacity='.22'><path d='M129 26l4 6h-8zM131 40v-6h-4v6z'/><circle cx='130' cy='33' r='9' fill='none' stroke='%233A4454' stroke-width='1'/></g></svg>");background-size:260px 260px;color:var(--text);font-family:'Avenir Next','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono','SFMono-Regular',Consolas,monospace}
 button{cursor:pointer;font-family:inherit;font-size:inherit}
 input,textarea,select{font-family:inherit}
@@ -23,7 +23,7 @@ input[type=time]::-webkit-calendar-picker-indicator{filter:invert(.7)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .wrap{max-width:560px;margin:0 auto;padding:16px 14px 92px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:hidden}.card::before{content:'';position:absolute;top:0;left:14px;right:14px;height:3px;background:repeating-linear-gradient(90deg,var(--line) 0 9px,transparent 9px 18px);opacity:.7;pointer-events:none}
 .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
 .timeinput{background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-size:14px;font-family:'IBM Plex Mono',monospace}
 .textinput{width:100%;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:9px 10px;font-size:14px}
@@ -192,6 +192,7 @@ a.dl{color:var(--amber)}
       <div><div id="month-done" style="color:var(--teal);font-size:22px;font-weight:700"></div><div style="color:var(--faint);font-size:10px">DONE</div></div>
       <div><div id="month-planned" style="font-size:22px;font-weight:700"></div><div style="color:var(--faint);font-size:10px">PLANNED</div></div>
     </div>
+    <div id="month-gems" class="card" style="margin-bottom:14px"></div>
     <div id="month-days" class="card" style="text-align:left"></div>
   </div>
 
@@ -410,6 +411,17 @@ async function importVault(file){
   } catch { alert("Couldn't read that file."); }
 }
 
+
+/* ---------- gems: minted for 100% days; colors after the spinel collection ---------- */
+const GEM_COLORS = ["#E86FA4","#C4384F","#9B7FD4","#43C9A9"]; /* pink, berry red, lavender, teal */
+function gemSVG(color, size){
+  return "<svg width='"+size+"' height='"+size+"' viewBox='0 0 24 24' style='vertical-align:-2px'>"
+    + "<polygon points='12,2 20,9 12,22 4,9' fill='"+color+"' opacity='.92'/>"
+    + "<polygon points='12,2 20,9 12,9' fill='#FFFFFF' opacity='.28'/>"
+    + "<polygon points='4,9 12,9 12,22' fill='#000000' opacity='.18'/>"
+    + "<polyline points='4,9 20,9' stroke='#FFFFFF' stroke-width='.8' opacity='.35' fill='none'/></svg>";
+}
+
 /* ---------- render ---------- */
 const TAPE_START=300, TAPE_END=1440, TAPE_SPAN=TAPE_END-TAPE_START;
 const tapeX = m => ((Math.min(Math.max(m,TAPE_START),TAPE_END)-TAPE_START)/TAPE_SPAN*100)+"%";
@@ -434,7 +446,7 @@ function render(){
 
   /* progress */
   const fmtH = m => Math.floor(m/60)+"h"+(m%60?" "+(m%60)+"m":"");
-  $("progress-text").innerHTML = fmtH(done)+" / "+fmtH(planned)+" · <b style='color:"+(pct>=100?"var(--teal)":"var(--amber)")+"'>"+pct+"%</b>";
+  $("progress-text").innerHTML = fmtH(done)+" / "+fmtH(planned)+" · <b style='color:"+(pct>=100?"var(--teal)":"var(--amber)")+"'>"+pct+"%</b>"+(pct>=100&&planned>0?" "+gemSVG(GEM_COLORS[new Date(viewDate+"T12:00:00").getDate()%GEM_COLORS.length],13):"");
   const fill = $("progress-fill");
   fill.style.width = Math.min(100,pct)+"%";
   fill.style.background = pct>=100 ? "var(--teal)" : "linear-gradient(90deg,var(--amberdk),var(--amber))";
@@ -512,13 +524,19 @@ function renderMonth(){
   $("month-sub").textContent = "avg daily completion · "+results.length+" tracked day"+(results.length===1?"":"s");
   $("month-done").textContent = Math.round(results.reduce((s,r)=>s+r.done,0)/60)+"h";
   $("month-planned").textContent = Math.round(results.reduce((s,r)=>s+r.planned,0)/60)+"h";
+  const gems = results.filter(r => r.pct >= 1);
+  $("month-gems").innerHTML = gems.length
+    ? "<div class='eyebrow' style='margin-bottom:8px'>Gem vault · "+gems.length+" perfect day"+(gems.length===1?"":"s")+"</div>"
+      + "<div style='display:flex;flex-wrap:wrap;gap:6px;justify-content:center'>"
+      + gems.map(g => "<span title='Day "+g.day+"'>"+gemSVG(GEM_COLORS[g.day % GEM_COLORS.length],26)+"</span>").join("") + "</div>"
+    : "<div class='eyebrow' style='margin-bottom:6px'>Gem vault</div><div style='color:var(--faint);font-size:12px'>Finish a day at 100% to mint a gem.</div>";
   $("month-days").innerHTML = results.length
     ? "<div class='eyebrow' style='margin-bottom:10px'>Tracked days</div>" + results.map(r =>
         "<div style='display:flex;align-items:center;gap:10px;margin-bottom:7px'>"
         + "<span class='mono' style='font-size:12px;color:var(--dim);width:24px;text-align:right'>"+r.day+"</span>"
         + "<div style='flex:1;height:8px;background:var(--ink);border-radius:4px;overflow:hidden'>"
-        + "<div style='height:100%;width:"+Math.min(100,Math.round(r.pct*100))+"%;background:"+(r.pct>=1?"var(--teal)":"var(--amber)")+";border-radius:4px'></div></div>"
-        + "<span class='mono' style='font-size:12px;color:var(--dim);width:36px'>"+Math.round(r.pct*100)+"%</span></div>").join("")
+        + "<div style='height:100%;width:"+Math.min(100,Math.round(r.pct*100))+"%;background:"+(r.pct>=1?"#9B7FD4":"var(--amber)")+";border-radius:4px'></div></div>"
+        + "<span class='mono' style='font-size:12px;color:var(--dim);width:36px'>"+Math.round(r.pct*100)+"%</span>"+(r.pct>=1?gemSVG(GEM_COLORS[r.day%GEM_COLORS.length],14):"<span style='width:14px;display:inline-block'></span>")+"</div>").join("")
     : "<div style='color:var(--faint);font-size:13px;text-align:center'>Nothing tracked yet this month.</div>";
 }
 
